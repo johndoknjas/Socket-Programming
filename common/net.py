@@ -1,6 +1,6 @@
 from .packet import PacketTranslator as _PacketTranslator
 from .state import StateMachine as _StateMachine
-from .debug import debug
+from .print import debug
 import socket as _socket
 
 # ----------------------------------------------------------------------------------------------------------------------

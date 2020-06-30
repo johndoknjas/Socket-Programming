@@ -1,10 +1,11 @@
 from common.net import Client
 from common.random import Random
 from common.asn2 import ASN2_PROTOCOL, Packet0Data, Packet1Suicide
-from common.debug import debug
+from common.print import debug
+import common.print as printer
 
 debug.name = "sender"
-debug.enabled = False
+debug.enabled = True
 
 
 class Config:
@@ -38,26 +39,25 @@ class Config:
 
 	def generate_delay(self):
 		return self.timing_random.next_float(0, 5)
-	
+
 
 def STATE_SEND_PACKET(client):
 	# Increment the sequence.
 	client.last_sequence += 1
-	
+
 	# Exit if the number of segments has been sent is reached.
 	if client.last_sequence == config.segments:
 		client.send(Packet1Suicide())
 		return None
-	
+
 	# Create the packet to send.
 	packet = Packet0Data()
 	packet.data = config.generate_data()
 	packet.sequence_segment = client.last_sequence % 2
 	client.last_packet = packet
-	
+
 	# Send the packet.
-	print("A data segment with sequence number " + str(client.last_sequence % 2) + " is about to be sent")
-	print("Segment sent: " + str(packet))
+	printer.packet_sent(packet)
 	client.send(packet)
 
 	print("The sender is moving to state WAIT FOR ACK " + str(client.last_sequence % 2))
@@ -65,8 +65,7 @@ def STATE_SEND_PACKET(client):
 
 
 def STATE_RESEND_PACKET(client):
-	print("A data segment with sequence number " + str(client.last_sequence % 2) + " is about to be resent")
-	print("Segment sent: " + str(client.last_packet))
+	printer.packet_sent_duplicate(client.last_packet)
 	client.send(client.last_packet)
 
 	print("The sender is moving back to state WAIT FOR ACK " + str(client.last_sequence % 2))
@@ -82,18 +81,14 @@ def STATE_WAIT_FOR_ACK(receiver):
 
 	# Handle corrupted packets.
 	if config.is_corrupted():
-		print("A Corrupted ACK segment has just been received")
-		
+		printer.packet_received_corrupt(True)
 		# FIXME: Ask prof what to do if the sender's ACK is corrupted.
 		#        I assume that it's best to pretend it was never received, and re-send it.
 		return STATE_RESEND_PACKET
 
 	# Next.
-	print("An ACK" + str(packet.sequence_acknowledgement) + " packet has just been received")
-	print("ACK received: " + str(packet))
+	printer.packet_received(packet)
 	return STATE_SEND_PACKET
-
-
 
 
 config = Config()

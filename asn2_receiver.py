@@ -1,10 +1,11 @@
 from common.net import Server
 from common.random import Random
 from common.asn2 import ASN2_PROTOCOL, Packet1Suicide
-from common.debug import debug
+from common.print import debug
+import common.print as asnpr
 
 debug.name = "receiver"
-debug.enabled = False
+debug.enabled = True
 
 
 class Config:
@@ -28,8 +29,7 @@ class Config:
 
 def send_ack(server, packet):
 	ack = packet.as_ack()
-	print("An ACK" + str(packet.sequence_segment) + " is about to be sent")
-	print("ACK to send contains: " + str(ack))
+	asnpr.packet_sent(ack)
 	server.send(ack)
 
 
@@ -37,11 +37,13 @@ def STATE_WAIT_FOR_PACKET(server):
 	packet = server.recv(timeout=None)
 	if isinstance(packet, Packet1Suicide):
 		debug("Receiver told to terminate.")
+		server.connection.close()
+		server.socket.close()
 		exit(0)
 	
 	# Handle corrupted packets.
 	if config.is_corrupted():
-		print("A Corrupted segment has been received")
+		asnpr.packet_received_corrupt(False)
 		print("The receiver is moving back to state WAIT FOR " + str(server.next_sequence) + " FROM BELOW")
 		return STATE_WAIT_FOR_PACKET
 	
@@ -54,8 +56,7 @@ def STATE_WAIT_FOR_PACKET(server):
 	
 	
 def STATE_RESPOND_TO_GOOD_PACKET(server, packet):
-	print("A segment with sequence number " + str(packet.sequence_segment) + " has been received")
-	print("Segment received contains: " + str(packet))
+	asnpr.packet_received(packet)
 	send_ack(server, packet)
 
 	server.next_sequence = (packet.sequence_segment + 1) % 2
@@ -66,8 +67,7 @@ def STATE_RESPOND_TO_GOOD_PACKET(server, packet):
 	
 	
 def STATE_RESPOND_TO_DUPLICATE_PACKET(server, packet):
-	print("A duplicate segment with sequence number " + str(packet.sequence_segment) + " has been received")
-	print("Segment received contains: " + str(packet))
+	asnpr.packet_received_duplicate(packet)
 	send_ack(server, packet)
 	
 	print("The receiver is moving back to state WAIT FOR " + str(server.next_sequence) + " FROM BELOW")
