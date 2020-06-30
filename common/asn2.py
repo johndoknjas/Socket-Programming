@@ -73,7 +73,7 @@ class Packet0Data(Packet):
 	@acknowledgement.setter
 	def acknowledgement(self, value):
 		if type(value) == bool:
-			value = 1 if bool else 0
+			value = 1 if value else 0
 
 		self._raw[3] = value
 
