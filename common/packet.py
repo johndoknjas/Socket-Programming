@@ -1,3 +1,16 @@
+from functools import reduce
+from math import ceil
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+SIZE_BOOL = 8
+SIZE_INT32 = 32
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+
 class Field:
 	"""
 	A class representing a field in a packet.
@@ -13,9 +26,12 @@ class Packet:
 	A class representing a packet.
 	"""
 
-	SIZE_BOOL = 8
-	SIZE_INT32 = 32
 	FIELDS = []
+	ID = None
+
+	@property
+	def FIELDS_SIZE(self):
+		return int(ceil(float(reduce(lambda acc, x: acc + x.size, self.FIELDS, 0)) / 8))
 
 	def __init__(self):
 		self._raw = []
@@ -34,7 +50,7 @@ class PacketTranslator:
 		:param packet: The packet to serialize.
 		:return: The serialized bytes.
 		"""
-		buffer = []
+		buffer = bytearray()
 		scratch = 0
 		scratch_bits = 0
 		for index, data in enumerate(packet._raw):
@@ -43,7 +59,7 @@ class PacketTranslator:
 
 			while True:
 				bits_used = min(8 - scratch_bits, bits_remaining)
-				
+
 				data_to_copy = data >> (bits_remaining - bits_used)
 				bits_remaining -= bits_used
 
@@ -64,6 +80,7 @@ class PacketTranslator:
 		# Shift over remaining bits and pad.
 		if scratch_bits > 0:
 			buffer.append(scratch << (8 - scratch_bits))
+			
 		return buffer
 
 	def deserialize(self, packet, packet_bytes):
@@ -77,7 +94,7 @@ class PacketTranslator:
 		current_byte = 0
 		current_byte_offset = 0
 		for index, field in enumerate(packet.FIELDS):
-			
+
 			bits_required = field.size
 			scratch = 0
 			scratch_bits = 0
@@ -104,56 +121,3 @@ class PacketTranslator:
 					break
 
 		return instance
-
-
-class Asn2Packet(Packet):
-	"""
-	A data packet for Assignment 2.
-	"""
-	
-	FIELDS = [
-		Field(name="Data", size=Packet.SIZE_INT32),
-		Field(name="SeqSeg", size=Packet.SIZE_BOOL),
-		Field(name="SeqAck", size=Packet.SIZE_BOOL),
-		Field(name="Ack", size=Packet.SIZE_BOOL)
-	]
-
-	def __init__(self):
-		super().__init__()
-		self.data = 0
-		self.sequence_segment = 0
-		self.sequence_acknowledgement = 0
-		self.acknowledgement = 0
-
-	@property
-	def data(self):
-		return self._raw[0]
-
-	@data.setter
-	def data(self, value):
-		self._raw[0] = value
-
-	@property
-	def sequence_segment(self):
-		return self._raw[1]
-
-	@sequence_segment.setter
-	def sequence_segment(self, value):
-		self._raw[1] = value
-
-	@property
-	def sequence_acknowledgement(self):
-		return self._raw[2]
-
-	@sequence_acknowledgement.setter
-	def sequence_acknowledgement(self, value):
-		self._raw[2] = value
-
-	@property
-	def acknowledgement(self):
-		return self._raw[3]
-
-	@acknowledgement.setter
-	def acknowledgement(self, value):
-		self._raw[3] = value
-
