@@ -64,6 +64,9 @@ def STATE_SEND_PACKET(client):
 	packet.sequence_segment = client.last_sequence % 2
 	client.last_packet = packet
 
+	# Print the state change message.
+	print("The sender is moving to state WAIT FOR CALL " + str(packet.sequence_segment) + " FROM ABOVE")
+
 	# Send the packet.
 	wait()
 	printer.packet_sent(packet)
