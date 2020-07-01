@@ -5,7 +5,7 @@ from common.print import debug
 import common.print as asnpr
 
 debug.name = "receiver"
-debug.enabled = True
+debug.enabled = False
 
 
 class Config:
@@ -75,7 +75,7 @@ def STATE_RESPOND_TO_DUPLICATE_PACKET(server, packet):
 
 
 config = Config()
-# config.read_from_stdin()
+config.read_from_stdin()
 server = Server(ASN2_PROTOCOL)
 server.last_sequence = 1
 server.next_sequence = 0

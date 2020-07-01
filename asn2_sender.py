@@ -6,7 +6,7 @@ from common.print import debug
 import common.print as printer
 
 debug.name = "sender"
-debug.enabled = True
+debug.enabled = False
 
 
 class Config:
@@ -105,7 +105,7 @@ def STATE_WAIT_FOR_ACK(receiver):
 
 
 config = Config()
-# config.read_from_stdin()
+config.read_from_stdin()
 client = Client(ASN2_PROTOCOL)
 client.delayed_until = 0
 client.last_sequence = -1
