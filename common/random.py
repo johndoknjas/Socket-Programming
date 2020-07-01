@@ -37,7 +37,7 @@ class Random:
 		:param max: The maximum number possible.
 		:return: The generated float.
 		"""
-		return min + ((max + 1) * self.__rand.random())
+		return min + (max * self.__rand.random())
 
 	def next_bool(self, probability=0.5):
 		"""

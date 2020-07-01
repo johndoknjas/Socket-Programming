@@ -1,3 +1,4 @@
+import time
 from common.net import Client
 from common.random import Random
 from common.asn2 import ASN2_PROTOCOL, Packet0Data, Packet1Suicide
@@ -41,6 +42,13 @@ class Config:
 		return self.timing_random.next_float(0, 5)
 
 
+def wait():
+	remaining = client.delayed_until - time.time()
+	if remaining > 0:
+		debug("Delayed for " + str(remaining) + " seconds.")
+		time.sleep(remaining)
+
+
 def STATE_SEND_PACKET(client):
 	# Increment the sequence.
 	client.last_sequence += 1
@@ -57,16 +65,20 @@ def STATE_SEND_PACKET(client):
 	client.last_packet = packet
 
 	# Send the packet.
+	wait()
 	printer.packet_sent(packet)
 	client.send(packet)
+	client.delayed_until = time.time() + config.generate_delay()
 
 	print("The sender is moving to state WAIT FOR ACK " + str(client.last_sequence % 2))
 	return STATE_WAIT_FOR_ACK
 
 
 def STATE_RESEND_PACKET(client):
+	wait()
 	printer.packet_sent_duplicate(client.last_packet)
 	client.send(client.last_packet)
+	client.delayed_until = time.time() + config.generate_delay()
 
 	print("The sender is moving back to state WAIT FOR ACK " + str(client.last_sequence % 2))
 	return STATE_WAIT_FOR_ACK
@@ -82,8 +94,6 @@ def STATE_WAIT_FOR_ACK(receiver):
 	# Handle corrupted packets.
 	if config.is_corrupted():
 		printer.packet_received_corrupt(True)
-		# FIXME: Ask prof what to do if the sender's ACK is corrupted.
-		#        I assume that it's best to pretend it was never received, and re-send it.
 		return STATE_RESEND_PACKET
 
 	# Next.
@@ -94,6 +104,7 @@ def STATE_WAIT_FOR_ACK(receiver):
 config = Config()
 # config.read_from_stdin()
 client = Client(ASN2_PROTOCOL)
+client.delayed_until = 0
 client.last_sequence = -1
 client.last_packet = None
 

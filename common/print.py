@@ -78,7 +78,7 @@ class AssignmentFancy(AssignmentPrinter):
 	FANCY_SYM_SEND = "\x1B[34m  >\x1B[0m"
 	FANCY_SYM_SEND_DUPLICATE = "\x1B[2;31m* >\x1B[39m"
 	FANCY_SYM_RECV_CORRUPT = "\x1B[31m! <\x1B[39m"
-	FANCY_WORD_ACK = "\x1B[33mACK"
+	FANCY_WORD_ACK = "\x1B[43;30mACK"
 	FANCY_WORD_SEG = "\x1B[33mSEG"
 
 	def corrupted_ack(self):
