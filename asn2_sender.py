@@ -78,10 +78,8 @@ def STATE_SEND_PACKET(client):
 
 
 def STATE_RESEND_PACKET(client):
-	wait()
 	printer.packet_sent_duplicate(client.last_packet)
 	client.send(client.last_packet)
-	client.delayed_until = time.time() + config.generate_delay()
 
 	print("The sender is moving back to state WAIT FOR ACK " + str(client.last_sequence % 2))
 	return STATE_WAIT_FOR_ACK
